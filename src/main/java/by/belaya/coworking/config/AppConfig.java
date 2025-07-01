@@ -1,4 +1,4 @@
-package config;
+package by.belaya.coworking.config;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.context.annotation.Bean;
@@ -11,11 +11,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(basePackages = {
-        "repository.hibernate",
-        "service",
-        "controller"
-})
+@ComponentScan(basePackages = "by.belaya.coworking")
 public class AppConfig {
 
     @Bean
