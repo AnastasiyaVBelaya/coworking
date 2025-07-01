@@ -1,6 +1,6 @@
-package repository.api;
+package by.belaya.coworking.repository.api;
 
-import repository.entity.User;
+import by.belaya.coworking.repository.entity.User;
 
 import java.util.Optional;
 

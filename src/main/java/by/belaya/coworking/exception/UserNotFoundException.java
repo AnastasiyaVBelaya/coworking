@@ -1,4 +1,4 @@
-package exception;
+package by.belaya.coworking.exception;
 
 public class UserNotFoundException extends RuntimeException {
     private final String login;

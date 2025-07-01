@@ -1,4 +1,4 @@
-package repository.entity;
+package by.belaya.coworking.repository.entity;
 
 import jakarta.persistence.*;
 

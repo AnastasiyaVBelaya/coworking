@@ -1,7 +1,7 @@
-package service.api;
+package by.belaya.coworking.service.api;
 
-import model.WorkspaceDTO;
-import repository.entity.Workspace;
+import by.belaya.coworking.model.WorkspaceDTO;
+import by.belaya.coworking.repository.entity.Workspace;
 
 import java.util.Set;
 import java.util.UUID;

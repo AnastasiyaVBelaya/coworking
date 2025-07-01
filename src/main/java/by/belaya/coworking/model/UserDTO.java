@@ -1,4 +1,4 @@
-package model;
+package by.belaya.coworking.model;
 
 public class UserDTO {
     private final String login;

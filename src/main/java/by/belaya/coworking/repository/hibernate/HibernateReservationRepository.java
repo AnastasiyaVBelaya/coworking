@@ -1,10 +1,10 @@
-package repository.hibernate;
+package by.belaya.coworking.repository.hibernate;
 
+import by.belaya.coworking.repository.entity.Reservation;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
-import repository.api.IReservationRepository;
-import repository.entity.Reservation;
+import by.belaya.coworking.repository.api.IReservationRepository;
 
 import java.util.*;
 

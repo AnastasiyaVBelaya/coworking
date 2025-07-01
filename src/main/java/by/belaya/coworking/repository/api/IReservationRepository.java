@@ -1,6 +1,6 @@
-package repository.api;
+package by.belaya.coworking.repository.api;
 
-import repository.entity.Reservation;
+import by.belaya.coworking.repository.entity.Reservation;
 
 import java.util.Optional;
 import java.util.Set;

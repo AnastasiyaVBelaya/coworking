@@ -1,4 +1,4 @@
-package model;
+package by.belaya.coworking.model;
 
 import java.math.BigDecimal;
 

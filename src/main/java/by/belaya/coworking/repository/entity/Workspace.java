@@ -1,7 +1,7 @@
-package repository.entity;
+package by.belaya.coworking.repository.entity;
 
 import jakarta.persistence.*;
-import model.WorkspaceType;
+import by.belaya.coworking.model.WorkspaceType;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

@@ -1,10 +1,10 @@
-package repository.hibernate;
+package by.belaya.coworking.repository.hibernate;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
-import repository.api.IWorkspaceRepository;
-import repository.entity.Workspace;
+import by.belaya.coworking.repository.api.IWorkspaceRepository;
+import by.belaya.coworking.repository.entity.Workspace;
 
 import java.util.*;
 

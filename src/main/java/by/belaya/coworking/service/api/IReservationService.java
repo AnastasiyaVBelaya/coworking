@@ -1,8 +1,8 @@
-package service.api;
+package by.belaya.coworking.service.api;
 
-import model.ReservationDTO;
-import model.UserDTO;
-import repository.entity.Reservation;
+import by.belaya.coworking.model.ReservationDTO;
+import by.belaya.coworking.model.UserDTO;
+import by.belaya.coworking.repository.entity.Reservation;
 
 import java.util.Set;
 import java.util.UUID;

@@ -1,12 +1,12 @@
-package controller;
+package by.belaya.coworking.controller;
 
-import model.*;
-import repository.entity.Reservation;
-import repository.entity.User;
-import repository.entity.Workspace;
-import service.api.IReservationService;
-import service.api.IUserService;
-import service.api.IWorkspaceService;
+import by.belaya.coworking.model.*;
+import by.belaya.coworking.repository.entity.Reservation;
+import by.belaya.coworking.repository.entity.User;
+import by.belaya.coworking.repository.entity.Workspace;
+import by.belaya.coworking.service.api.IReservationService;
+import by.belaya.coworking.service.api.IUserService;
+import by.belaya.coworking.service.api.IWorkspaceService;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;

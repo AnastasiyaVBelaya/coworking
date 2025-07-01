@@ -1,7 +1,7 @@
-package repository.entity;
+package by.belaya.coworking.repository.entity;
 
 import jakarta.persistence.*;
-import model.Role;
+import by.belaya.coworking.model.Role;
 
 import java.io.Serializable;
 import java.util.Objects;

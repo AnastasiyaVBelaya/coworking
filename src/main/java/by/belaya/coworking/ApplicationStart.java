@@ -1,9 +1,11 @@
-import config.AppConfig;
-import controller.MenuController;
+package by.belaya.coworking;
+
+import by.belaya.coworking.config.AppConfig;
+import by.belaya.coworking.controller.MenuController;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import service.api.IReservationService;
-import service.api.IUserService;
-import service.api.IWorkspaceService;
+import by.belaya.coworking.service.api.IReservationService;
+import by.belaya.coworking.service.api.IUserService;
+import by.belaya.coworking.service.api.IWorkspaceService;
 
 import java.util.Scanner;
 

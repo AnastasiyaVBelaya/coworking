@@ -1,15 +1,15 @@
-import model.Role;
-import model.UserDTO;
+import by.belaya.coworking.model.Role;
+import by.belaya.coworking.model.UserDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import repository.api.IUserRepository;
-import repository.entity.User;
-import service.UserService;
-import service.api.IUserValidator;
+import by.belaya.coworking.repository.api.IUserRepository;
+import by.belaya.coworking.repository.entity.User;
+import by.belaya.coworking.service.UserService;
+import by.belaya.coworking.service.api.IUserValidator;
 
 import java.util.Optional;
 

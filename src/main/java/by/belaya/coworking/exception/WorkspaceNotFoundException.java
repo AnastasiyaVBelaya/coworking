@@ -1,4 +1,4 @@
-package exception;
+package by.belaya.coworking.exception;
 
 import java.util.UUID;
 
