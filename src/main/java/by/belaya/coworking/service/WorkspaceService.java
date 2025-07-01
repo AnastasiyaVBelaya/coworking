@@ -1,12 +1,12 @@
-package service;
+package by.belaya.coworking.service;
 
-import exception.WorkspaceNotFoundException;
-import model.WorkspaceDTO;
+import by.belaya.coworking.exception.WorkspaceNotFoundException;
+import by.belaya.coworking.model.WorkspaceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import repository.api.IWorkspaceRepository;
-import repository.entity.Workspace;
-import service.api.IWorkspaceService;
+import by.belaya.coworking.repository.api.IWorkspaceRepository;
+import by.belaya.coworking.repository.entity.Workspace;
+import by.belaya.coworking.service.api.IWorkspaceService;
 
 import java.util.Set;
 import java.util.UUID;
@@ -30,7 +30,6 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Workspace find(UUID id) {
         if (id == null) {
             throw new IllegalArgumentException("Workspace ID cannot be null!");
@@ -40,13 +39,11 @@ public class WorkspaceService implements IWorkspaceService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Set<Workspace> findAll() {
         return workspaceRepository.findAll();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Set<Workspace> findAvailable() {
         return workspaceRepository.findAvailable();
     }

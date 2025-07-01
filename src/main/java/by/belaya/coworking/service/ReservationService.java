@@ -1,18 +1,18 @@
-package service;
+package by.belaya.coworking.service;
 
-import exception.ReservationNotFoundException;
-import model.ReservationDTO;
-import model.UserDTO;
-import model.WorkspaceDTO;
+import by.belaya.coworking.exception.ReservationNotFoundException;
+import by.belaya.coworking.model.ReservationDTO;
+import by.belaya.coworking.model.UserDTO;
+import by.belaya.coworking.model.WorkspaceDTO;
+import by.belaya.coworking.service.api.IReservationService;
+import by.belaya.coworking.service.api.IUserService;
+import by.belaya.coworking.service.api.IWorkspaceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import repository.api.IReservationRepository;
-import repository.entity.Reservation;
-import repository.entity.User;
-import repository.entity.Workspace;
-import service.api.IReservationService;
-import service.api.IUserService;
-import service.api.IWorkspaceService;
+import by.belaya.coworking.repository.api.IReservationRepository;
+import by.belaya.coworking.repository.entity.Reservation;
+import by.belaya.coworking.repository.entity.User;
+import by.belaya.coworking.repository.entity.Workspace;
 
 import java.util.Set;
 import java.util.UUID;
@@ -66,7 +66,6 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Set<Reservation> findByUser(UserDTO userDTO) {
         if (userDTO == null || isBlank(userDTO.getLogin())) {
             throw new IllegalArgumentException("UserDTO or login cannot be null or empty");
@@ -76,7 +75,6 @@ public class ReservationService implements IReservationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Set<Reservation> findAll() {
         return reservationRepository.findAll();
     }
@@ -99,7 +97,6 @@ public class ReservationService implements IReservationService {
                 })
                 .orElseThrow(() -> new ReservationNotFoundException(id));
     }
-
 
     private boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
