@@ -4,9 +4,9 @@
     <persistence-unit name="pu_name" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
-        <class>repository.entity.User</class>
-        <class>repository.entity.Workspace</class>
-        <class>repository.entity.Reservation</class>
+        <class>by.belaya.coworking.repository.entity.User</class>
+        <class>by.belaya.coworking.repository.entity.Workspace</class>
+        <class>by.belaya.coworking.repository.entity.Reservation</class>
 
         <properties>
 

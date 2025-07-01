@@ -1,14 +1,14 @@
-import exception.WorkspaceNotFoundException;
-import model.WorkspaceDTO;
-import model.WorkspaceType;
+import by.belaya.coworking.exception.WorkspaceNotFoundException;
+import by.belaya.coworking.model.WorkspaceDTO;
+import by.belaya.coworking.model.WorkspaceType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import repository.api.IWorkspaceRepository;
-import repository.entity.Workspace;
-import service.WorkspaceService;
+import by.belaya.coworking.repository.api.IWorkspaceRepository;
+import by.belaya.coworking.repository.entity.Workspace;
+import by.belaya.coworking.service.WorkspaceService;
 
 import java.math.BigDecimal;
 import java.util.HashSet;

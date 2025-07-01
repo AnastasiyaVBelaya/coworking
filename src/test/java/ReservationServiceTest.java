@@ -1,20 +1,21 @@
-import exception.ReservationNotFoundException;
-import model.ReservationDTO;
-import model.UserDTO;
-import model.WorkspaceDTO;
-import model.WorkspaceType;
+import by.belaya.coworking.exception.ReservationNotFoundException;
+import by.belaya.coworking.model.ReservationDTO;
+import by.belaya.coworking.model.Role;
+import by.belaya.coworking.model.UserDTO;
+import by.belaya.coworking.model.WorkspaceDTO;
+import by.belaya.coworking.model.WorkspaceType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import repository.api.IReservationRepository;
-import repository.entity.Reservation;
-import repository.entity.User;
-import repository.entity.Workspace;
-import service.ReservationService;
-import service.api.IUserService;
-import service.api.IWorkspaceService;
+import by.belaya.coworking.repository.api.IReservationRepository;
+import by.belaya.coworking.repository.entity.Reservation;
+import by.belaya.coworking.repository.entity.User;
+import by.belaya.coworking.repository.entity.Workspace;
+import by.belaya.coworking.service.ReservationService;
+import by.belaya.coworking.service.api.IUserService;
+import by.belaya.coworking.service.api.IWorkspaceService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -56,7 +57,7 @@ class ReservationServiceTest {
                 LocalTime.of(10, 0)
         );
 
-        User user = new User(model.Role.CUSTOMER, "user");
+        User user = new User(Role.CUSTOMER, "user");
         Reservation expectedReservation = new Reservation(
                 user,
                 workspace,
@@ -230,7 +231,7 @@ class ReservationServiceTest {
 
     @Test
     void remove_ShouldReturnTrueAndUpdateWorkspace_WhenReservationExists() {
-        User user = new User(model.Role.CUSTOMER, "user");
+        User user = new User(Role.CUSTOMER, "user");
         Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
         UUID reservationId = UUID.randomUUID();
         Reservation reservation = new Reservation(user, workspace, LocalDate.now(),
@@ -249,7 +250,7 @@ class ReservationServiceTest {
 
     @Test
     void remove_ShouldReturnFalse_WhenReservationNotRemoved() {
-        User user = new User(model.Role.CUSTOMER, "user");
+        User user = new User(Role.CUSTOMER, "user");
         Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
         UUID reservationId = UUID.randomUUID();
         Reservation reservation = new Reservation(user, workspace, LocalDate.now(),
