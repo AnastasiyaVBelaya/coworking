@@ -1,7 +1,7 @@
-package service;
+package by.belaya.coworking.service;
 
+import by.belaya.coworking.service.api.IUserValidator;
 import org.springframework.stereotype.Component;
-import service.api.IUserValidator;
 
 @Component
 public class UserValidator implements IUserValidator {
