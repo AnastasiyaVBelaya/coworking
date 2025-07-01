@@ -1,15 +1,16 @@
-package service;
+package by.belaya.coworking.service;
 
-import model.Role;
-import model.UserDTO;
+import by.belaya.coworking.model.Role;
+import by.belaya.coworking.model.UserDTO;
+import by.belaya.coworking.service.api.IUserService;
+import by.belaya.coworking.service.api.IUserValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import repository.api.IUserRepository;
-import repository.entity.User;
-import service.api.IUserService;
-import service.api.IUserValidator;
+import by.belaya.coworking.repository.api.IUserRepository;
+import by.belaya.coworking.repository.entity.User;
 
 @Service
+@Transactional
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
     private final IUserValidator userValidator;
@@ -20,7 +21,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User login(UserDTO userDTO) {
         if (userDTO == null) {
             throw new IllegalArgumentException("UserDTO cannot be null");
@@ -38,8 +38,7 @@ public class UserService implements IUserService {
                 .orElseGet(() -> addNewUser(login));
     }
 
-    @Transactional
-    protected User addNewUser(String login) {
+    private User addNewUser(String login) {
         Role role = isAdmin(login) ? Role.ADMIN : Role.CUSTOMER;
         User user = new User(role, login);
         userRepository.add(user);
