@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin - Workspaces</title>
+    <meta charset="UTF-8"/>
+</head>
+<body>
+<h1>All Workspaces</h1>
+
+<p><a th:href="@{/admin/workspaces/add}">Add New Workspace</a></p>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Price</th>
+        <th>Available</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="workspace : ${workspaces}">
+        <td th:text="${workspace.id}"></td>
+        <td th:text="${workspace.type}"></td>
+        <td th:text="${workspace.price}"></td>
+        <td th:text="${workspace.available}"></td>
+        <td>
+            <a th:href="@{'/admin/workspaces/update/' + ${workspace.id}}">Edit</a> |
+            <a th:href="@{'/admin/workspaces/delete/' + ${workspace.id}}"
+               onclick="return confirm('Are you sure?');">Delete</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p><a th:href="@{/}">Back to Home</a></p>
+</body>
+</html>
