@@ -7,6 +7,9 @@ public class WorkspaceDTO {
     private BigDecimal price;
     private boolean available;
 
+    public WorkspaceDTO() {
+    }
+
     public WorkspaceDTO(WorkspaceType type, BigDecimal price, boolean available) {
         this.type = type;
         this.price = price;
@@ -17,11 +20,23 @@ public class WorkspaceDTO {
         return type;
     }
 
+    public void setType(WorkspaceType type) {
+        this.type = type;
+    }
+
     public BigDecimal getPrice() {
         return price;
     }
 
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
     public boolean isAvailable() {
         return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 }

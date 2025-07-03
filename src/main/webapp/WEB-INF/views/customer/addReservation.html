@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Reservation</title>
+    <meta charset="UTF-8"/>
+</head>
+<body>
+<h1>Add Reservation</h1>
+
+<form th:action="@{/customer/reservations/add}" th:object="${reservationDTO}" method="post">
+    <label for="workspaceId">Workspace:</label>
+    <select id="workspaceId" th:field="*{workspaceId}" required>
+        <option th:each="ws : ${workspaces}" th:value="${ws.id}" th:text="${ws.type + ' - ' + ws.id}"></option>
+    </select><br/>
+
+    <label for="date">Date:</label>
+    <input type="date" id="date" th:field="*{date}" required/><br/>
+
+    <label for="startTime">Start Time:</label>
+    <input type="time" id="startTime" th:field="*{startTime}" required/><br/>
+
+    <label for="endTime">End Time:</label>
+    <input type="time" id="endTime" th:field="*{endTime}" required/><br/>
+
+    <button type="submit">Reserve</button>
+</form>
+
+<div th:if="${#fields.hasErrors()}">
+    <ul>
+        <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+    </ul>
+</div>
+
+<p><a th:href="@{/customer/spaces}">Back to Available Spaces</a></p>
+</body>
+</html>
