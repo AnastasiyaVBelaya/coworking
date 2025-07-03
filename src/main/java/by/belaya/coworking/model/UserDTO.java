@@ -1,7 +1,10 @@
 package by.belaya.coworking.model;
 
 public class UserDTO {
-    private final String login;
+    private String login;
+
+    public UserDTO() {
+    }
 
     public UserDTO(String login) {
         this.login = login;
@@ -9,5 +12,9 @@ public class UserDTO {
 
     public String getLogin() {
         return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
     }
 }
