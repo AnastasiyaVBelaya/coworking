@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Reservations</title>
+    <meta charset="UTF-8"/>
+</head>
+<body>
+<h1>My Reservations</h1>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Workspace ID</th>
+        <th>Workspace Type</th>
+        <th>Date</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Cancel</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="reservation : ${myReservations}">
+        <td th:text="${reservation.id}"></td>
+        <td th:text="${reservation.workspace.id}"></td>
+        <td th:text="${reservation.workspace.type}"></td>
+        <td th:text="${reservation.date}"></td>
+        <td th:text="${reservation.startTime}"></td>
+        <td th:text="${reservation.endTime}"></td>
+        <td>
+            <a th:href="@{'/customer/reservations/cancel/' + ${reservation.id}}"
+               onclick="return confirm('Cancel this reservation?');">
+                Cancel
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p><a th:href="@{/customer/spaces}">Back to Available Spaces</a></p>
+<p><a th:href="@{/}">Back to Home</a></p>
+</body>
+</html>
