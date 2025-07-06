@@ -1,0 +1,24 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: coworking
+  datasource:
+    url: jdbc:postgresql://localhost:5432/coworking
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+      show-sql: true
+      format-sql: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    enable:
+      all: true

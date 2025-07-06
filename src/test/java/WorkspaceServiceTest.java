@@ -1,19 +1,20 @@
+import by.belaya.coworking.dto.workspace.WorkspaceCreateRequestDto;
+import by.belaya.coworking.dto.workspace.WorkspaceResponseDto;
+import by.belaya.coworking.dto.workspace.WorkspaceUpdateRequestDto;
+import by.belaya.coworking.entity.Workspace;
+import by.belaya.coworking.enums.WorkspaceType;
 import by.belaya.coworking.exception.WorkspaceNotFoundException;
-import by.belaya.coworking.model.WorkspaceDTO;
-import by.belaya.coworking.model.WorkspaceType;
+import by.belaya.coworking.repository.WorkspaceRepository;
+import by.belaya.coworking.service.WorkspaceServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import by.belaya.coworking.repository.api.IWorkspaceRepository;
-import by.belaya.coworking.repository.entity.Workspace;
-import by.belaya.coworking.service.WorkspaceService;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,162 +23,175 @@ import static org.mockito.Mockito.*;
 class WorkspaceServiceTest {
 
     @Mock
-    private IWorkspaceRepository workspaceRepository;
+    private WorkspaceRepository workspaceRepository;
 
-    private WorkspaceService workspaceService;
+    private WorkspaceServiceImpl workspaceService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        workspaceService = new WorkspaceService(workspaceRepository);
+        workspaceService = new WorkspaceServiceImpl(workspaceRepository);
     }
 
     @Test
-    void add_ShouldThrowException_WhenWorkspaceDtoIsNull() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> workspaceService.add(null));
-        assertEquals("Workspace cannot be null!", ex.getMessage());
+    void create_ShouldThrowException_WhenCreateDtoIsNull() {
+        WorkspaceNotFoundException ex = assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.create(null));
+        assertEquals("WorkspaceCreateRequestDto cannot be null", ex.getMessage());
         verifyNoInteractions(workspaceRepository);
     }
 
     @Test
-    void add_ShouldCreateAndAddWorkspace() {
-        WorkspaceDTO dto = new WorkspaceDTO(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(1000.0), true);
-        Workspace workspace = new Workspace(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(1000.0), true);
+    void create_ShouldSaveWorkspaceAndReturnDto() {
+        WorkspaceCreateRequestDto createDto = new WorkspaceCreateRequestDto(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(1000));
+        Workspace workspace = new Workspace(createDto.getType(), createDto.getPrice(), true);
 
-        when(workspaceRepository.add(any())).thenReturn(workspace);
+        when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
 
-        Workspace result = workspaceService.add(dto);
+        WorkspaceResponseDto response = workspaceService.create(createDto);
 
         ArgumentCaptor<Workspace> captor = ArgumentCaptor.forClass(Workspace.class);
-        verify(workspaceRepository).add(captor.capture());
+        verify(workspaceRepository).save(captor.capture());
+        Workspace saved = captor.getValue();
 
-        Workspace captured = captor.getValue();
-        assertAll("Workspace fields",
-                () -> assertEquals(dto.getType(), captured.getType()),
-                () -> assertEquals(dto.getPrice(), captured.getPrice()),
-                () -> assertEquals(dto.isAvailable(), captured.isAvailable())
-        );
+        assertEquals(createDto.getType(), saved.getType());
+        assertEquals(createDto.getPrice(), saved.getPrice());
+        assertTrue(saved.isAvailable());
 
-        assertSame(workspace, result);
+        assertNotNull(response);
+        assertEquals(workspace.getId(), response.getId());
+        assertEquals(saved.getType(), response.getType());
+        assertEquals(saved.getPrice(), response.getPrice());
+        assertTrue(response.isAvailable());
     }
 
     @Test
-    void find_ShouldThrowException_WhenIdIsNull() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> workspaceService.find(null));
-        assertEquals("Workspace ID cannot be null!", ex.getMessage());
-        verifyNoInteractions(workspaceRepository);
-    }
-
-    @Test
-    void find_ShouldThrowWorkspaceNotFoundException_WhenNotFound() {
+    void getById_ShouldReturnDto_WhenWorkspaceExists() {
         UUID id = UUID.randomUUID();
-        when(workspaceRepository.find(id)).thenReturn(Optional.empty());
+        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, BigDecimal.valueOf(500), true);
 
-        WorkspaceNotFoundException ex = assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.find(id));
-        assertEquals(id, ex.getWorkspaceId());
-        verify(workspaceRepository).find(id);
+        when(workspaceRepository.findById(id)).thenReturn(Optional.of(workspace));
+
+        WorkspaceResponseDto response = workspaceService.getById(id);
+
+        assertNotNull(response);
+        assertEquals(id, response.getId());
+        assertEquals(workspace.getType(), response.getType());
+        verify(workspaceRepository).findById(id);
     }
 
     @Test
-    void find_ShouldReturnWorkspace_WhenFound() {
+    void getById_ShouldThrowException_WhenWorkspaceNotFound() {
         UUID id = UUID.randomUUID();
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, BigDecimal.valueOf(500.0), true);
-        when(workspaceRepository.find(id)).thenReturn(Optional.of(workspace));
+        when(workspaceRepository.findById(id)).thenReturn(Optional.empty());
 
-        Workspace result = workspaceService.find(id);
-
-        assertSame(workspace, result);
-        verify(workspaceRepository).find(id);
+        assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.getById(id));
+        verify(workspaceRepository).findById(id);
     }
 
     @Test
-    void findAll_ShouldReturnAllWorkspaces() {
-        Set<Workspace> allWorkspaces = new HashSet<>();
-        allWorkspaces.add(new Workspace(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(500.0), true));
-        allWorkspaces.add(new Workspace(WorkspaceType.ROOM, BigDecimal.valueOf(200.0), false));
+    void getAll_ShouldReturnListOfDtos() {
+        Workspace w1 = new Workspace(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(500), true);
+        Workspace w2 = new Workspace(WorkspaceType.ROOM, BigDecimal.valueOf(200), false);
 
-        when(workspaceRepository.findAll()).thenReturn(allWorkspaces);
+        when(workspaceRepository.findAll()).thenReturn(List.of(w1, w2));
 
-        Set<Workspace> result = workspaceService.findAll();
+        List<WorkspaceResponseDto> list = workspaceService.getAll();
 
-        assertSame(allWorkspaces, result);
+        assertEquals(2, list.size());
+        assertTrue(list.stream().anyMatch(dto -> dto.getId().equals(w1.getId())));
+        assertTrue(list.stream().anyMatch(dto -> dto.getId().equals(w2.getId())));
+
         verify(workspaceRepository).findAll();
     }
 
     @Test
-    void findAvailable_ShouldReturnAvailableWorkspaces() {
-        Set<Workspace> available = new HashSet<>();
-        available.add(new Workspace(WorkspaceType.PRIVATE, BigDecimal.valueOf(500.0), true));
+    void getAvailable_ShouldReturnOnlyAvailableDtos() {
+        Workspace w1 = new Workspace(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(500), true);
+        Workspace w2 = new Workspace(WorkspaceType.ROOM, BigDecimal.valueOf(200), false);
 
-        when(workspaceRepository.findAvailable()).thenReturn(available);
+        when(workspaceRepository.findAll()).thenReturn(List.of(w1, w2));
 
-        Set<Workspace> result = workspaceService.findAvailable();
+        List<WorkspaceResponseDto> available = workspaceService.getAvailable();
 
-        assertSame(available, result);
-        verify(workspaceRepository).findAvailable();
+        assertEquals(1, available.size());
+        assertEquals(w1.getId(), available.get(0).getId());
+        assertTrue(available.get(0).isAvailable());
+
+        verify(workspaceRepository).findAll();
     }
 
     @Test
     void update_ShouldThrowException_WhenIdOrDtoIsNull() {
-        WorkspaceDTO dto = new WorkspaceDTO(WorkspaceType.ROOM, BigDecimal.valueOf(1000.0), true);
+        WorkspaceUpdateRequestDto updateDto = new WorkspaceUpdateRequestDto(WorkspaceType.ROOM, BigDecimal.valueOf(1000), true);
 
-        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
-                () -> workspaceService.update(null, dto));
-        assertEquals("WorkspaceDTO or ID cannot be null!", ex1.getMessage());
+        WorkspaceNotFoundException ex1 = assertThrows(WorkspaceNotFoundException.class,
+                () -> workspaceService.update(null, updateDto));
+        assertEquals("WorkspaceUpdateRequestDto or ID cannot be null", ex1.getMessage());
 
-        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
+        WorkspaceNotFoundException ex2 = assertThrows(WorkspaceNotFoundException.class,
                 () -> workspaceService.update(UUID.randomUUID(), null));
-        assertEquals("WorkspaceDTO or ID cannot be null!", ex2.getMessage());
+        assertEquals("WorkspaceUpdateRequestDto or ID cannot be null", ex2.getMessage());
 
         verifyNoInteractions(workspaceRepository);
     }
 
     @Test
-    void update_ShouldThrowWorkspaceNotFoundException_WhenWorkspaceNotFound() {
+    void update_ShouldThrowException_WhenWorkspaceNotFound() {
         UUID id = UUID.randomUUID();
-        WorkspaceDTO dto = new WorkspaceDTO(WorkspaceType.ROOM, BigDecimal.valueOf(1000.0), true);
-        when(workspaceRepository.find(id)).thenReturn(Optional.empty());
+        WorkspaceUpdateRequestDto updateDto = new WorkspaceUpdateRequestDto(WorkspaceType.ROOM, BigDecimal.valueOf(1000), true);
 
-        assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.update(id, dto));
-        verify(workspaceRepository).find(id);
+        when(workspaceRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.update(id, updateDto));
+        verify(workspaceRepository).findById(id);
     }
 
     @Test
-    void update_ShouldModifyAndUpdateWorkspace() {
+    void update_ShouldModifyWorkspaceAndReturnDto() {
         UUID id = UUID.randomUUID();
-        Workspace existing = new Workspace(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(500.0), false);
-        WorkspaceDTO dto = new WorkspaceDTO(WorkspaceType.ROOM, BigDecimal.valueOf(1500.0), true);
+        Workspace existing = new Workspace(WorkspaceType.OPEN_SPACE, BigDecimal.valueOf(500), false);
 
-        when(workspaceRepository.find(id)).thenReturn(Optional.of(existing));
-        when(workspaceRepository.update(existing)).thenReturn(existing);
+        WorkspaceUpdateRequestDto updateDto = new WorkspaceUpdateRequestDto(WorkspaceType.ROOM, BigDecimal.valueOf(1500), true);
 
-        Workspace updated = workspaceService.update(id, dto);
+        when(workspaceRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(workspaceRepository.save(existing)).thenReturn(existing);
 
-        assertAll(
-                () -> assertEquals(dto.getType(), updated.getType()),
-                () -> assertEquals(dto.getPrice(), updated.getPrice()),
-                () -> assertEquals(dto.isAvailable(), updated.isAvailable())
-        );
-        verify(workspaceRepository).find(id);
-        verify(workspaceRepository).update(existing);
+        WorkspaceResponseDto updated = workspaceService.update(id, updateDto);
+
+        assertEquals(updateDto.getType(), updated.getType());
+        assertEquals(updateDto.getPrice(), updated.getPrice());
+        assertTrue(updated.isAvailable());
+
+        verify(workspaceRepository).findById(id);
+        verify(workspaceRepository).save(existing);
     }
 
     @Test
-    void remove_ShouldThrowException_WhenIdIsNull() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> workspaceService.remove(null));
-        assertEquals("Workspace ID cannot be null!", ex.getMessage());
+    void delete_ShouldThrowException_WhenIdIsNull() {
+        WorkspaceNotFoundException ex = assertThrows(WorkspaceNotFoundException.class,
+                () -> workspaceService.delete(null));
+        assertEquals("Workspace ID cannot be null", ex.getMessage());
         verifyNoInteractions(workspaceRepository);
     }
 
     @Test
-    void remove_ShouldCallRepositoryRemove() {
+    void delete_ShouldThrowException_WhenWorkspaceNotExists() {
         UUID id = UUID.randomUUID();
-        when(workspaceRepository.remove(id)).thenReturn(true);
+        when(workspaceRepository.existsById(id)).thenReturn(false);
 
-        boolean result = workspaceService.remove(id);
+        assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.delete(id));
+        verify(workspaceRepository).existsById(id);
+    }
 
-        assertTrue(result);
-        verify(workspaceRepository).remove(id);
+    @Test
+    void delete_ShouldCallDeleteById_WhenWorkspaceExists() {
+        UUID id = UUID.randomUUID();
+        when(workspaceRepository.existsById(id)).thenReturn(true);
+        doNothing().when(workspaceRepository).deleteById(id);
+
+        workspaceService.delete(id);
+
+        verify(workspaceRepository).existsById(id);
+        verify(workspaceRepository).deleteById(id);
     }
 }
