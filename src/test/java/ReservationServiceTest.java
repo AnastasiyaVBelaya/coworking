@@ -1,27 +1,33 @@
+import by.belaya.coworking.dto.reservation.ReservationCreateRequestDto;
+import by.belaya.coworking.dto.reservation.ReservationResponseDto;
+import by.belaya.coworking.dto.reservation.ReservationUpdateRequestDto;
+import by.belaya.coworking.dto.user.UserResponseDto;
+import by.belaya.coworking.dto.workspace.WorkspaceResponseDto;
+import by.belaya.coworking.dto.workspace.WorkspaceUpdateRequestDto;
+import by.belaya.coworking.entity.Reservation;
+import by.belaya.coworking.entity.User;
+import by.belaya.coworking.entity.Workspace;
+import by.belaya.coworking.enums.Role;
+import by.belaya.coworking.enums.WorkspaceType;
 import by.belaya.coworking.exception.ReservationNotFoundException;
-import by.belaya.coworking.model.ReservationDTO;
-import by.belaya.coworking.model.Role;
-import by.belaya.coworking.model.UserDTO;
-import by.belaya.coworking.model.WorkspaceDTO;
-import by.belaya.coworking.model.WorkspaceType;
+import by.belaya.coworking.repository.ReservationRepository;
+import by.belaya.coworking.service.ReservationServiceImpl;
+import by.belaya.coworking.service.api.UserService;
+import by.belaya.coworking.service.api.WorkspaceService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import by.belaya.coworking.repository.api.IReservationRepository;
-import by.belaya.coworking.repository.entity.Reservation;
-import by.belaya.coworking.repository.entity.User;
-import by.belaya.coworking.repository.entity.Workspace;
-import by.belaya.coworking.service.ReservationService;
-import by.belaya.coworking.service.api.IUserService;
-import by.belaya.coworking.service.api.IWorkspaceService;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,259 +38,165 @@ import static org.mockito.Mockito.*;
 class ReservationServiceTest {
 
     @Mock
-    private IReservationRepository reservationRepository;
+    private ReservationRepository reservationRepository;
 
     @Mock
-    private IUserService userService;
+    private UserService userService;
 
     @Mock
-    private IWorkspaceService workspaceService;
+    private WorkspaceService workspaceService;
 
     @InjectMocks
-    private ReservationService reservationService;
+    private ReservationServiceImpl reservationService;
 
-    @Test
-    void add_ShouldCreateAndReturnReservation() {
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID workspaceId = workspace.getId();
+    private Reservation reservation;
+    private UUID reservationId;
+    private UUID userId;
+    private UUID workspaceId;
+    private UserResponseDto userDto;
+    private WorkspaceResponseDto workspaceDto;
 
-        UserDTO userDTO = new UserDTO("user");
-        ReservationDTO reservationDTO = new ReservationDTO(
-                workspaceId,
-                "user",
-                LocalDate.now(),
-                LocalTime.of(9, 0),
-                LocalTime.of(10, 0)
-        );
+    @BeforeEach
+    void setUp() {
+        reservationId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+        workspaceId = UUID.randomUUID();
 
-        User user = new User(Role.CUSTOMER, "user");
-        Reservation expectedReservation = new Reservation(
+        userDto = new UserResponseDto(userId, "login", Role.CUSTOMER, null, null);
+
+        workspaceDto = new WorkspaceResponseDto(workspaceId, WorkspaceType.PRIVATE, BigDecimal.TEN,
+                true, null, null, 0L);
+
+        User user = new User("login", "pass", Role.CUSTOMER);
+        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, BigDecimal.TEN, true);
+
+        reservation = new Reservation(
                 user,
                 workspace,
-                reservationDTO.getDate(),
-                reservationDTO.getStartTime(),
-                reservationDTO.getEndTime()
-        );
-
-        when(userService.login(userDTO)).thenReturn(user);
-        when(workspaceService.find(workspaceId)).thenReturn(workspace);
-        when(reservationRepository.add(any(Reservation.class))).thenReturn(expectedReservation);
-
-        Reservation actualReservation = reservationService.add(reservationDTO, userDTO);
-
-        assertSame(expectedReservation, actualReservation);
-        verify(userService).login(userDTO);
-        verify(workspaceService).find(workspaceId);
-        verify(reservationRepository).add(any(Reservation.class));
-        verify(workspaceService).update(eq(workspaceId), any(WorkspaceDTO.class));
-    }
-
-    @Test
-    void add_ShouldThrowException_WhenReservationDtoIsNull() {
-        UserDTO userDTO = new UserDTO("user");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(null, userDTO));
-        assertEquals("ReservationDTO cannot be null", ex.getMessage());
-        verifyNoInteractions(userService, workspaceService, reservationRepository);
-    }
-
-    @Test
-    void add_ShouldThrowException_WhenUserDtoIsNull() {
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID workspaceId = workspace.getId();
-
-        ReservationDTO reservationDTO = new ReservationDTO(
-                workspaceId,
-                "user",
-                LocalDate.now(),
+                LocalDate.now().plusDays(1),
                 LocalTime.of(9, 0),
-                LocalTime.of(10, 0)
+                LocalTime.of(12, 0)
         );
+        reservation.setWorkspace(workspace);
+        reservation.setUser(user);
+    }
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(reservationDTO, null));
-        assertEquals("UserDTO or login cannot be null or empty", ex.getMessage());
-        verifyNoInteractions(userService, workspaceService, reservationRepository);
+    private void setId(UUID id, Reservation reservation) {
+        try {
+            Field field = Reservation.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(reservation, id);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
-    void add_ShouldThrowException_WhenUserLoginIsBlank() {
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID workspaceId = workspace.getId();
+    void create_ShouldCreateNewReservation() {
+        ReservationCreateRequestDto requestDto = new ReservationCreateRequestDto();
+        requestDto.setWorkspaceId(workspaceId);
+        requestDto.setReservationDate(reservation.getReservationDate());
+        requestDto.setStartTime(reservation.getStartTime());
+        requestDto.setEndTime(reservation.getEndTime());
 
-        ReservationDTO reservationDTO = new ReservationDTO(
-                workspaceId,
-                "user",
-                LocalDate.now(),
-                LocalTime.of(9, 0),
-                LocalTime.of(10, 0)
-        );
+        when(userService.getById(userId)).thenReturn(userDto);
+        when(workspaceService.getById(workspaceId)).thenReturn(workspaceDto);
+        when(workspaceService.update(isNull(), any(WorkspaceUpdateRequestDto.class))).thenReturn(workspaceDto);
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> {
+            Reservation res = invocation.getArgument(0);
+            setId(reservationId, res);
+            return res;
+        });
 
-        UserDTO userDTO = new UserDTO("   ");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(reservationDTO, userDTO));
-        assertEquals("UserDTO or login cannot be null or empty", ex.getMessage());
-        verifyNoInteractions(userService, workspaceService, reservationRepository);
+        ReservationResponseDto result = reservationService.create(requestDto, userDto.getId());
+
+        assertNotNull(result);
+        assertNotNull(result.getId());
+        assertEquals(userDto.getId(), result.getUserId());
+        assertEquals(workspaceDto.getId(), result.getWorkspaceId());
+        assertEquals(reservation.getReservationDate(), result.getReservationDate());
     }
 
     @Test
-    void add_ShouldThrowException_WhenWorkspaceIdIsNull() {
-        ReservationDTO reservationDTO = new ReservationDTO(null,
-                "user", LocalDate.now(), LocalTime.of(9, 0), LocalTime.of(10, 0));
-        UserDTO userDTO = new UserDTO("user");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(reservationDTO, userDTO));
-        assertEquals("Workspace ID cannot be null", ex.getMessage());
-        verifyNoInteractions(userService, workspaceService, reservationRepository);
-    }
-
-    @Test
-    void add_ShouldThrowException_WhenDateIsNull() {
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID workspaceId = workspace.getId();
-
-        ReservationDTO reservationDTO = new ReservationDTO(
-                workspaceId,
-                "user",
-                null,
-                LocalTime.of(9, 0),
-                LocalTime.of(10, 0)
-        );
-
-        UserDTO userDTO = new UserDTO("user");
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(reservationDTO, userDTO));
-        assertEquals("Reservation date cannot be null", ex.getMessage());
-        verifyNoInteractions(userService, workspaceService, reservationRepository);
-    }
-
-    @Test
-    void add_ShouldThrowException_WhenStartOrEndTimeIsNull() {
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID workspaceId = workspace.getId();
-
-        UserDTO userDTO = new UserDTO("user");
-
-        ReservationDTO reservationDTO1 = new ReservationDTO(
-                workspaceId,
-                "user",
-                LocalDate.now(),
-                null,
-                LocalTime.of(10, 0)
-        );
-        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(reservationDTO1, userDTO));
-        assertEquals("Start time and end time cannot be null", ex1.getMessage());
-
-        ReservationDTO reservationDTO2 = new ReservationDTO(
-                workspaceId,
-                "user",
-                LocalDate.now(),
-                LocalTime.of(9, 0),
-                null
-        );
-        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.add(reservationDTO2, userDTO));
-        assertEquals("Start time and end time cannot be null", ex2.getMessage());
-
-        verifyNoInteractions(userService, workspaceService, reservationRepository);
-    }
-
-    @Test
-    void findByUser_ShouldReturnReservations() {
-        String login = "user";
-        UserDTO userDTO = new UserDTO(login);
-        Set<Reservation> reservations = Set.of(mock(Reservation.class));
-
-        when(reservationRepository.findByUser(login)).thenReturn(reservations);
-
-        Set<Reservation> result = reservationService.findByUser(userDTO);
-
-        assertEquals(reservations, result);
-        verify(reservationRepository).findByUser(login);
-    }
-
-    @Test
-    void findByUser_ShouldThrowException_WhenUserDtoIsNullOrLoginBlank() {
-        IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.findByUser(null));
-        assertEquals("UserDTO or login cannot be null or empty", ex1.getMessage());
-
-        UserDTO userDTO = new UserDTO("   ");
-        IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.findByUser(userDTO));
-        assertEquals("UserDTO or login cannot be null or empty", ex2.getMessage());
-
-        verifyNoInteractions(reservationRepository);
-    }
-
-    @Test
-    void findAll_ShouldReturnAllReservations() {
-        Set<Reservation> allReservations = Set.of(mock(Reservation.class));
-        when(reservationRepository.findAll()).thenReturn(allReservations);
-
-        Set<Reservation> result = reservationService.findAll();
-
-        assertEquals(allReservations, result);
-        verify(reservationRepository).findAll();
-    }
-
-    @Test
-    void remove_ShouldReturnTrueAndUpdateWorkspace_WhenReservationExists() {
-        User user = new User(Role.CUSTOMER, "user");
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID reservationId = UUID.randomUUID();
-        Reservation reservation = new Reservation(user, workspace, LocalDate.now(),
-                LocalTime.of(9, 0), LocalTime.of(10, 0));
-
+    void getById_ShouldReturnReservation_WhenExists() {
+        setId(reservationId, reservation);
         when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
-        when(reservationRepository.remove(reservationId)).thenReturn(true);
 
-        boolean result = reservationService.remove(reservationId);
+        ReservationResponseDto result = reservationService.getById(reservationId);
 
-        assertTrue(result);
-        verify(reservationRepository).remove(reservationId);
-        verify(workspaceService).update(eq(workspace.getId()), any(WorkspaceDTO.class));
-        assertTrue(workspace.isAvailable());
+        assertNotNull(result);
+        assertEquals(reservationId, result.getId());
     }
 
     @Test
-    void remove_ShouldReturnFalse_WhenReservationNotRemoved() {
-        User user = new User(Role.CUSTOMER, "user");
-        Workspace workspace = new Workspace(WorkspaceType.PRIVATE, new BigDecimal("100.00"), true);
-        UUID reservationId = UUID.randomUUID();
-        Reservation reservation = new Reservation(user, workspace, LocalDate.now(),
-                LocalTime.of(9, 0), LocalTime.of(10, 0));
-
-        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
-        when(reservationRepository.remove(reservationId)).thenReturn(false);
-
-        boolean result = reservationService.remove(reservationId);
-
-        assertFalse(result);
-        verify(reservationRepository).remove(reservationId);
-        verify(workspaceService, never()).update(any(), any());
-    }
-
-    @Test
-    void remove_ShouldThrowReservationNotFoundException_WhenReservationNotFound() {
-        UUID reservationId = UUID.randomUUID();
+    void getById_ShouldThrowException_WhenNotFound() {
         when(reservationRepository.findById(reservationId)).thenReturn(Optional.empty());
 
-        ReservationNotFoundException ex = assertThrows(ReservationNotFoundException.class,
-                () -> reservationService.remove(reservationId));
-        assertEquals("Reservation with ID " + reservationId + " not found", ex.getMessage());
-
-        verify(reservationRepository).findById(reservationId);
-        verifyNoMoreInteractions(reservationRepository, workspaceService);
+        assertThrows(ReservationNotFoundException.class, () -> reservationService.getById(reservationId));
     }
 
     @Test
-    void remove_ShouldThrowException_WhenIdIsNull() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> reservationService.remove(null));
-        assertEquals("ID cannot be null", ex.getMessage());
+    void getByUser_ShouldReturnUserReservations() {
+        when(reservationRepository.findByUser_Id(userId)).thenReturn(Collections.singleton(reservation));
 
-        verifyNoInteractions(reservationRepository, workspaceService);
+        List<ReservationResponseDto> result = reservationService.getByUser(userId);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void getAll_ShouldReturnAllReservations() {
+        when(reservationRepository.findAll()).thenReturn(Collections.singletonList(reservation));
+
+        List<ReservationResponseDto> result = reservationService.getAll();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void delete_ShouldDeleteReservation() {
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+        when(workspaceService.update(nullable(UUID.class), any(WorkspaceUpdateRequestDto.class))).thenReturn(workspaceDto);
+
+        reservationService.delete(reservationId);
+
+        verify(reservationRepository).deleteById(reservationId);
+    }
+
+    @Test
+    void delete_ShouldThrowException_WhenNotFound() {
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class, () -> reservationService.delete(reservationId));
+    }
+
+    @Test
+    void update_ShouldUpdateExistingReservation() {
+        ReservationUpdateRequestDto dto = new ReservationUpdateRequestDto();
+        dto.setReservationDate(LocalDate.now().plusDays(2));
+        dto.setStartTime(LocalTime.of(10, 0));
+        dto.setEndTime(LocalTime.of(13, 0));
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any(Reservation.class))).thenReturn(reservation);
+
+        ReservationResponseDto result = reservationService.update(reservationId, dto);
+
+        assertNotNull(result);
+        assertEquals(dto.getReservationDate(), result.getReservationDate());
+    }
+
+    @Test
+    void update_ShouldThrowException_WhenNotFound() {
+        ReservationUpdateRequestDto dto = new ReservationUpdateRequestDto();
+        dto.setReservationDate(LocalDate.now());
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(12, 0));
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class, () -> reservationService.update(reservationId, dto));
     }
 }

@@ -1,168 +1,140 @@
 package by.belaya.coworking.controller;
 
-import by.belaya.coworking.model.*;
-import by.belaya.coworking.repository.entity.Reservation;
-import by.belaya.coworking.repository.entity.Workspace;
-import by.belaya.coworking.service.api.IReservationService;
-import by.belaya.coworking.service.api.IUserService;
-import by.belaya.coworking.service.api.IWorkspaceService;
+import by.belaya.coworking.dto.reservation.ReservationCreateRequestDto;
+import by.belaya.coworking.dto.reservation.ReservationResponseDto;
+import by.belaya.coworking.dto.reservation.ReservationUpdateRequestDto;
+import by.belaya.coworking.dto.user.*;
+import by.belaya.coworking.dto.workspace.WorkspaceCreateRequestDto;
+import by.belaya.coworking.dto.workspace.WorkspaceResponseDto;
+import by.belaya.coworking.dto.workspace.WorkspaceUpdateRequestDto;
+import by.belaya.coworking.service.api.ReservationService;
+import by.belaya.coworking.service.api.UserService;
+import by.belaya.coworking.service.api.WorkspaceService;
 import jakarta.validation.Valid;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
-@Controller
-@RequestMapping("/")
+@RestController
+@RequestMapping("/api")
 public class CoworkingController {
 
-    private final IUserService userService;
-    private final IWorkspaceService workspaceService;
-    private final IReservationService reservationService;
+    private final UserService userService;
+    private final WorkspaceService workspaceService;
+    private final ReservationService reservationService;
 
-    private UserDTO currentUser;
-
-    public CoworkingController(IUserService userService,
-                               IWorkspaceService workspaceService,
-                               IReservationService reservationService) {
+    public CoworkingController(UserService userService,
+                               WorkspaceService workspaceService,
+                               ReservationService reservationService) {
         this.userService = userService;
         this.workspaceService = workspaceService;
         this.reservationService = reservationService;
     }
 
-    @GetMapping
-    public String mainPage() {
-        return "index";
-    }
-
-    @GetMapping("/login")
-    public String loginForm() {
-        return "login";
-    }
-
     @PostMapping("/login")
-    public String doLogin(@RequestParam("login") String login, Model model) {
-        try {
-            var user = userService.login(new UserDTO(login.trim()));
-            currentUser = new UserDTO(user.getLogin());
-
-            if (user.getRole() == Role.ADMIN) {
-                return "redirect:/admin/workspaces";
-            } else {
-                return "redirect:/customer/spaces";
-            }
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("error", ex.getMessage());
-            return "login";
-        }
+    public ResponseEntity<UserResponseDto> login(@RequestBody @Valid UserLoginRequestDto loginDto) {
+        return ResponseEntity.ok(userService.login(loginDto));
     }
 
-    @GetMapping("/admin/workspaces")
-    public String listWorkspaces(Model model) {
-        Set<Workspace> workspaces = workspaceService.findAll();
-        model.addAttribute("workspaces", workspaces);
-        return "admin/workspaces";
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRegistrationRequestDto registerDto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(userService.create(registerDto));
     }
 
-    @GetMapping("/admin/workspaces/add")
-    public String addWorkspaceForm(Model model) {
-        model.addAttribute("workspaceDTO", new WorkspaceDTO());
-        model.addAttribute("types", WorkspaceType.values());
-        return "admin/addWorkspace";
+    @GetMapping("/users")
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAll());
     }
 
-    @PostMapping("/admin/workspaces/add")
-    public String addWorkspaceSubmit(
-            @Valid @ModelAttribute("workspaceDTO") WorkspaceDTO workspaceDTO,
-            BindingResult bindingResult,
-            Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("types", WorkspaceType.values());
-            return "admin/addWorkspace";
-        }
-        workspaceService.add(workspaceDTO);
-        return "redirect:/admin/workspaces";
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserResponseDto> getUser(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.getById(id));
     }
 
-    @GetMapping("/admin/workspaces/update/{id}")
-    public String updateWorkspaceForm(@PathVariable("id") UUID id, Model model) {
-        Workspace workspace = workspaceService.find(id);
-        WorkspaceDTO dto = new WorkspaceDTO(workspace.getType(), workspace.getPrice(), workspace.isAvailable());
-        model.addAttribute("workspaceDTO", dto);
-        model.addAttribute("workspaceId", id);
-        model.addAttribute("types", WorkspaceType.values());
-        return "admin/updateWorkspace";
+    @PutMapping("/users/{id}")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable UUID id,
+                                                      @RequestBody @Valid UserUpdateRequestDto updateDto) {
+        return ResponseEntity.ok(userService.update(id, updateDto));
     }
 
-    @PostMapping("/admin/workspaces/update/{id}")
-    public String updateWorkspaceSubmit(
-            @PathVariable("id") UUID id,
-            @Valid @ModelAttribute("workspaceDTO") WorkspaceDTO workspaceDTO,
-            BindingResult bindingResult,
-            Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("types", WorkspaceType.values());
-            model.addAttribute("workspaceId", id);
-            return "admin/updateWorkspace";
-        }
-        workspaceService.update(id, workspaceDTO);
-        return "redirect:/admin/workspaces";
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/admin/workspaces/delete/{id}")
-    public String deleteWorkspace(@PathVariable("id") UUID id) {
-        workspaceService.remove(id);
-        return "redirect:/admin/workspaces";
+    @GetMapping("/workspaces")
+    public ResponseEntity<List<WorkspaceResponseDto>> getAllWorkspaces() {
+        return ResponseEntity.ok(workspaceService.getAll());
     }
 
-    @GetMapping("/admin/reservations")
-    public String listReservations(Model model) {
-        Set<Reservation> reservations = reservationService.findAll();
-        model.addAttribute("reservations", reservations);
-        return "admin/reservations";
+    @GetMapping("/workspaces/available")
+    public ResponseEntity<List<WorkspaceResponseDto>> getAvailableWorkspaces() {
+        return ResponseEntity.ok(workspaceService.getAvailable());
     }
 
-    @GetMapping("/customer/spaces")
-    public String listAvailableSpaces(Model model) {
-        Set<Workspace> available = workspaceService.findAvailable();
-        model.addAttribute("availableWorkspaces", available);
-        return "customer/availableSpaces";
+    @GetMapping("/workspaces/{id}")
+    public ResponseEntity<WorkspaceResponseDto> getWorkspace(@PathVariable UUID id) {
+        return ResponseEntity.ok(workspaceService.getById(id));
     }
 
-    @GetMapping("/customer/reservations/add")
-    public String addReservationForm(Model model) {
-        model.addAttribute("reservationDTO", new ReservationDTO());
-        model.addAttribute("workspaces", workspaceService.findAvailable());
-        System.out.println("Available workspaces: " + workspaceService.findAvailable());
-        return "customer/addReservation";
+    @PostMapping("/workspaces")
+    public ResponseEntity<WorkspaceResponseDto> createWorkspace(@RequestBody @Valid WorkspaceCreateRequestDto
+                                                                            createDto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(workspaceService.create(createDto));
     }
 
-    @PostMapping("/customer/reservations/add")
-    public String addReservationSubmit(
-            @Valid @ModelAttribute("reservationDTO") ReservationDTO reservationDTO,
-            BindingResult bindingResult,
-            Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("workspaces", workspaceService.findAvailable());
-            return "customer/addReservation";
-        }
-        reservationService.add(reservationDTO, currentUser);
-        return "redirect:/customer/reservations";
+    @PutMapping("/workspaces/{id}")
+    public ResponseEntity<WorkspaceResponseDto> updateWorkspace(@PathVariable UUID id,
+                                                                @RequestBody @Valid WorkspaceUpdateRequestDto
+                                                                        updateDto) {
+        return ResponseEntity.ok(workspaceService.update(id, updateDto));
     }
 
-    @GetMapping("/customer/reservations")
-    public String listMyReservations(Model model) {
-        Set<Reservation> myReservations = reservationService.findByUser(currentUser);
-        model.addAttribute("myReservations", myReservations);
-        return "customer/myReservations";
+    @DeleteMapping("/workspaces/{id}")
+    public ResponseEntity<Void> deleteWorkspace(@PathVariable UUID id) {
+        workspaceService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/customer/reservations/cancel/{id}")
-    public String cancelReservation(@PathVariable("id") UUID id) {
-        reservationService.remove(id);
-        return "redirect:/customer/reservations";
+    @GetMapping("/reservations")
+    public ResponseEntity<List<ReservationResponseDto>> getAllReservations() {
+        return ResponseEntity.ok(reservationService.getAll());
+    }
+
+    @GetMapping("/reservations/{id}")
+    public ResponseEntity<ReservationResponseDto> getReservation(@PathVariable UUID id) {
+        return ResponseEntity.ok(reservationService.getById(id));
+    }
+
+    @GetMapping("/users/{userId}/reservations")
+    public ResponseEntity<List<ReservationResponseDto>> getUserReservations(@PathVariable UUID userId) {
+        return ResponseEntity.ok(reservationService.getByUser(userId));
+    }
+
+    @PostMapping("/users/{userId}/reservations")
+    public ResponseEntity<ReservationResponseDto> createReservation(@PathVariable UUID userId,
+                                                                    @RequestBody @Valid ReservationCreateRequestDto
+                                                                            createDto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reservationService.create(createDto, userId));
+    }
+
+    @PutMapping("/reservations/{id}")
+    public ResponseEntity<ReservationResponseDto> updateReservation(@PathVariable UUID id,
+                                                                    @RequestBody @Valid ReservationUpdateRequestDto
+                                                                            updateDto) {
+        return ResponseEntity.ok(reservationService.update(id, updateDto));
+    }
+
+    @DeleteMapping("/reservations/{id}")
+    public ResponseEntity<Void> deleteReservation(@PathVariable UUID id) {
+        reservationService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
