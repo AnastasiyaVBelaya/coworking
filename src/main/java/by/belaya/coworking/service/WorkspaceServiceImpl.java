@@ -89,6 +89,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .collect(Collectors.toList());
     }
 
+    public Workspace getReferenceById(UUID id) {
+        return workspaceRepository.getReferenceById(id);
+    }
+
     @CacheEvict(value = "workspace", key = "#id")
     @Caching(evict = {
             @CacheEvict(value = "workspace", key = "'all'"),

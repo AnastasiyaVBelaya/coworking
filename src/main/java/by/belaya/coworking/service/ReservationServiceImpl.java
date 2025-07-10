@@ -48,10 +48,8 @@ public class ReservationServiceImpl implements ReservationService {
     })
     @Override
     public ReservationResponseDto create(ReservationCreateRequestDto dto, UUID userId) {
-        UserResponseDto userDto = userService.getById(userId);
-        WorkspaceResponseDto workspaceDto = workspaceService.getById(dto.getWorkspaceId());
-        User user = mapUserDtoToEntity(userDto);
-        Workspace workspace = mapWorkspaceDtoToEntity(workspaceDto);
+        User user = userService.getReferenceById(userId);
+        Workspace workspace = workspaceService.getReferenceById(dto.getWorkspaceId());
 
         Reservation reservation = new Reservation(
                 user,
