@@ -21,6 +21,8 @@ public interface WorkspaceService {
 
     List<WorkspaceResponseDto> getAvailable();
 
+    Workspace getReferenceById(UUID id);
+
     void delete(UUID id);
 
 }

@@ -17,6 +17,8 @@ public interface UserService {
 
     List<UserResponseDto> getAll();
 
+    User getReferenceById(UUID id);
+
     UserResponseDto login(UserLoginRequestDto loginDto);
 
 }
