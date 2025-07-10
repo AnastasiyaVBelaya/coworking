@@ -110,6 +110,10 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    public User getReferenceById(UUID id) {
+        return userRepository.getReferenceById(id);
+    }
+
     @Override
     public UserResponseDto login(UserLoginRequestDto loginDto) {
         if (loginDto == null || loginDto.getLogin() == null || loginDto.getPassword() == null) {
