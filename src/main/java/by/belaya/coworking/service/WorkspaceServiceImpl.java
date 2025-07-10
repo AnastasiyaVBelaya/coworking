@@ -28,10 +28,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         this.workspaceRepository = workspaceRepository;
     }
 
-    @CachePut(value = "workspace", key = "#result.id")
+    @CachePut(value = "workspacesCache", key = "#result.id")
     @Caching(evict = {
-            @CacheEvict(value = "workspace", key = "'all'"),
-            @CacheEvict(value = "workspace", key = "'available'")
+            @CacheEvict(value = "workspacesCache", key = "'all'"),
+            @CacheEvict(value = "workspacesCache", key = "'available'")
     })
     @Override
     public WorkspaceResponseDto create(WorkspaceCreateRequestDto createDto) {
@@ -44,10 +44,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         return toResponseDto(saved);
     }
 
-    @CachePut(value = "workspace", key = "#id")
+    @CachePut(value = "workspacesCache", key = "#id")
     @Caching(evict = {
-            @CacheEvict(value = "workspace", key = "'all'"),
-            @CacheEvict(value = "workspace", key = "'available'")
+            @CacheEvict(value = "workspacesCache", key = "'all'"),
+            @CacheEvict(value = "workspacesCache", key = "'available'")
     })
     @Override
     public WorkspaceResponseDto update(UUID id, WorkspaceUpdateRequestDto updateDto) {
@@ -62,7 +62,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         return toResponseDto(updated);
     }
 
-    @Cacheable(value = "workspace", key = "#id")
+    @Cacheable(value = "workspacesCache", key = "#id")
     @Override
     public WorkspaceResponseDto getById(UUID id) {
         Workspace workspace = workspaceRepository.findById(id)
@@ -70,7 +70,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         return toResponseDto(workspace);
     }
 
-    @Cacheable(value = "workspace", key = "'all'")
+    @Cacheable(value = "workspacesCache", key = "'all'")
     @Override
     public List<WorkspaceResponseDto> getAll() {
         return workspaceRepository.findAll()
@@ -79,7 +79,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "workspace", key = "'available'")
+    @Cacheable(value = "workspacesCache", key = "'available'")
     @Override
     public List<WorkspaceResponseDto> getAvailable() {
         return workspaceRepository.findAll()
@@ -93,10 +93,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         return workspaceRepository.getReferenceById(id);
     }
 
-    @CacheEvict(value = "workspace", key = "#id")
+    @CacheEvict(value = "workspacesCache", key = "#id")
     @Caching(evict = {
-            @CacheEvict(value = "workspace", key = "'all'"),
-            @CacheEvict(value = "workspace", key = "'available'")
+            @CacheEvict(value = "workspacesCache", key = "'all'"),
+            @CacheEvict(value = "workspacesCache", key = "'available'")
     })
     @Override
     public void delete(UUID id) {

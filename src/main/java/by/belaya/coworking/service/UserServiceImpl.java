@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +25,13 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserValidator userValidator;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, UserValidator userValidator) {
+    public UserServiceImpl(UserRepository userRepository, UserValidator userValidator,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userValidator = userValidator;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @CachePut(value = "usersCache", key = "#result.id")
@@ -46,7 +50,7 @@ public class UserServiceImpl implements UserService {
 
         User user = new User(
                 createDto.getLogin(),
-                createDto.getPassword(),
+                passwordEncoder.encode(createDto.getPassword()),
                 Role.CUSTOMER
         );
         User savedUser = userRepository.save(user);
@@ -75,7 +79,7 @@ public class UserServiceImpl implements UserService {
         String newPassword = updateDto.getPassword();
         if (newPassword != null && !newPassword.isBlank()) {
             userValidator.validatePassword(newPassword);
-            user.setPassword(newPassword);
+            user.setPassword(passwordEncoder.encode(newPassword));
         }
 
         User updatedUser = userRepository.save(user);
@@ -123,7 +127,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByLogin(loginDto.getLogin())
                 .orElseThrow(() -> new UserNotFoundException(loginDto.getLogin()));
 
-        if (!user.getPassword().equals(loginDto.getPassword())) {
+        if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Incorrect password");
         }
 
